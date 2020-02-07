@@ -5,37 +5,53 @@
 ; Use Space to send the Virtual Key code
 
 k := 0
-vk := ""
 
-UpdateVK()
+; Ignore Space, Up, and Down to avoid loop
+IsDisabled(k) {
+    disabled := k = 0x20 || k = 0x26 || k = 0x28
+    return disabled
+}
+
+GetVK()
 {
-    global vk
-    global k
     vk := Format("vk{:02x}", k)
+    return vk
+}
+
+UpdateToolTip()
+{
+    vk := GetVK()
     name := GetKeyName(vk)
+    if (IsDisabled(k)) {
+        name := name . " [disabled]"
+    }
     ToolTip , %vk%: %name%, 40, 40, 1
 }
 
-UpdateVK()
-
 Up::
-    global vk
     global k
     if (k < 255)
     {
         k++
-        UpdateVK()
     }
+    UpdateToolTip()
     return
 
 Down::
-    global vk
     global k
     if (k > 0)
     {
         k--
-        UpdateVK()
     }
+    UpdateToolTip()
     return
 
-Space::send {%vk%}
+*Space::
+    ; Ignore Space, Up, and Down to avoid loop
+    disabled := IsDisabled(k)
+    if (disabled) {
+        return
+    }
+    vk := GetVK()
+    send {Blind}{%vk%}
+    return
